@@ -1,15 +1,14 @@
 package com.example.database
 
-import com.example.config.AppConfig
+import com.example.config.Config
 import io.ktor.server.application.Application
 import org.flywaydb.core.Flyway
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import javax.sql.DataSource
 
-fun Application.configureDatabase() {
-    val databaseConfig = AppConfig.from(environment.config)
-    val dataSource = DataSourceFactory.create(databaseConfig)
+fun Application.configureDatabase(config: Config) {
+    val dataSource = DataSourceFactory.create(config)
 
     runMigrations(dataSource)
     Database.connect(dataSource)

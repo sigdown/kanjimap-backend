@@ -1,5 +1,7 @@
 package com.example
 
+import com.example.config.AppConfig
+import com.example.config.Config
 import com.example.database.configureDatabase
 import com.example.plugins.configureCallLogging
 import com.example.plugins.configureRouting
@@ -10,20 +12,20 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 
 fun main() {
-    val port = System.getenv("PORT")?.toIntOrNull() ?: 8080
+    val config = AppConfig.load()
 
     embeddedServer(
         factory = Netty,
-        port = port,
-        host = "0.0.0.0",
-        module = Application::module,
+        port = config.serverPort,
+        host = config.serverHost,
+        module = { module(config) },
     ).start(wait = true)
 }
 
-fun Application.module() {
+fun Application.module(config: Config = AppConfig.load()) {
     configureCallLogging()
     configureSerialization()
     configureStatusPages()
-    configureDatabase()
+    configureDatabase(config)
     configureRouting()
 }

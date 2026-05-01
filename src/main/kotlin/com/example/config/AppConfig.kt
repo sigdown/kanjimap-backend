@@ -1,37 +1,45 @@
 package com.example.config
 
-import io.ktor.server.config.ApplicationConfig
+import io.github.cdimascio.dotenv.dotenv
 
 object AppConfig {
-    fun from(config: ApplicationConfig): DatabaseConfig = DatabaseConfig(
-        jdbcUrl = readString(config, "database.jdbcUrl", "DATABASE_JDBC_URL", "jdbc:postgresql://localhost:5432/app"),
-        username = readString(config, "database.username", "DATABASE_USER", "app"),
-        password = readString(config, "database.password", "DATABASE_PASSWORD", "app"),
-        maximumPoolSize = readInt(config, "database.maximumPoolSize", "DATABASE_MAX_POOL_SIZE", 10),
+    private val dotenv = dotenv {
+        ignoreIfMissing = true
+    }
+
+    fun load(): Config = Config(
+        serverHost = optionalString("SERVER_HOST") ?: "0.0.0.0",
+        serverPort = optionalInt("SERVER_PORT")
+            ?: optionalInt("PORT")
+            ?: 8080,
+        databaseUrl = requiredString("DATABASE_JDBC_URL"),
+        databaseUser = requiredString("DATABASE_USER"),
+        databasePassword = requiredString("DATABASE_PASSWORD"),
+        databaseMaximumPoolSize = optionalInt("DATABASE_MAX_POOL_SIZE") ?: 10,
     )
 
-    private fun readString(
-        config: ApplicationConfig,
-        path: String,
-        envName: String,
-        defaultValue: String,
-    ): String = System.getenv(envName)
-        ?: config.propertyOrNull(path)?.getString()
-        ?: defaultValue
+    private fun requiredString(name: String): String = optionalString(name)
+        ?: throw IllegalStateException(
+            "Missing required configuration '$name'. " +
+                "Set it as an environment variable or in a local .env file.",
+        )
 
-    private fun readInt(
-        config: ApplicationConfig,
-        path: String,
-        envName: String,
-        defaultValue: Int,
-    ): Int = System.getenv(envName)?.toIntOrNull()
-        ?: config.propertyOrNull(path)?.getString()?.toIntOrNull()
-        ?: defaultValue
+    private fun optionalString(name: String): String? =
+        System.getenv(name)?.takeIf { it.isNotBlank() }
+            ?: dotenv[name]?.takeIf { it.isNotBlank() }
+
+    private fun optionalInt(name: String): Int? {
+        val value = optionalString(name) ?: return null
+        return value.toIntOrNull()
+            ?: throw IllegalStateException("Configuration '$name' must be a valid integer, got '$value'.")
+    }
 }
 
-data class DatabaseConfig(
-    val jdbcUrl: String,
-    val username: String,
-    val password: String,
-    val maximumPoolSize: Int,
+data class Config(
+    val serverHost: String,
+    val serverPort: Int,
+    val databaseUrl: String,
+    val databaseUser: String,
+    val databasePassword: String,
+    val databaseMaximumPoolSize: Int,
 )

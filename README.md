@@ -55,10 +55,11 @@ curl http://localhost:8080/api/v1/users
 
 ## Environment variables
 
-The app reads env vars first, then falls back to `src/main/resources/application.yaml`.
+The app reads real environment variables first, then falls back to values in local `.env`.
 
 ```bash
-PORT=8080
+SERVER_HOST=0.0.0.0
+SERVER_PORT=8080
 DATABASE_JDBC_URL=jdbc:postgresql://localhost:5432/app
 DATABASE_USER=app
 DATABASE_PASSWORD=app
@@ -102,7 +103,6 @@ src/main/kotlin/com/example
   plugins/
   users/
 src/main/resources
-  application.yaml
   logback.xml
   db/migration/V1__create_users.sql
 ```

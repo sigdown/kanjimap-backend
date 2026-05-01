@@ -27,7 +27,7 @@ dependencies {
     implementation("io.ktor:ktor-serialization-kotlinx-json")
     implementation("io.ktor:ktor-server-status-pages")
     implementation("io.ktor:ktor-server-call-logging")
-    implementation("io.ktor:ktor-server-config-yaml")
+    implementation("io.github.cdimascio:dotenv-kotlin:6.5.1")
 
     implementation("org.jetbrains.exposed:exposed-core:1.2.0")
     implementation("org.jetbrains.exposed:exposed-jdbc:1.2.0")
