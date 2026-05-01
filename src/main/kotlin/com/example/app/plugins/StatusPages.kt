@@ -1,6 +1,5 @@
 package com.example.plugins
 
-import com.example.users.ErrorResponse
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
@@ -13,14 +12,14 @@ fun Application.configureStatusPages() {
         exception<IllegalArgumentException> { call, cause ->
             call.respond(
                 status = HttpStatusCode.BadRequest,
-                message = ErrorResponse(cause.message ?: "Bad request"),
+                message = mapOf("error" to (cause.message ?: "Bad request")),
             )
         }
 
         exception<NoSuchElementException> { call, cause ->
             call.respond(
                 status = HttpStatusCode.NotFound,
-                message = ErrorResponse(cause.message ?: "Not found"),
+                message = mapOf("error" to (cause.message ?: "Not found")),
             )
         }
 
@@ -28,7 +27,7 @@ fun Application.configureStatusPages() {
             call.application.environment.log.error("Unhandled error", cause)
             call.respond(
                 status = HttpStatusCode.InternalServerError,
-                message = ErrorResponse("Internal server error"),
+                message = mapOf("error" to "Internal server error"),
             )
         }
     }
