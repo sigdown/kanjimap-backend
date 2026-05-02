@@ -73,10 +73,15 @@ def child_texts(parent, tag_name: str) -> list[str]:
 
 
 @dataclass(frozen=True)
+class KanjiReadingRow:
+    reading: str
+    reading_type: str  # on | kun | nanori
+
+
+@dataclass(frozen=True)
 class KanjiMeaningRow:
-    reading: str | None
-    type_value: str
-    meaning: str | None
+    language_code: str
+    meaning: str
 
 
 def normalize_reading_type(r_type: str | None) -> str | None:
@@ -108,7 +113,8 @@ def parse_character(character):
         if jlpt_value:
             jlpt_level = jlpt_value
 
-    rows: list[KanjiMeaningRow] = []
+    readings: list[KanjiReadingRow] = []
+    meanings: list[KanjiMeaningRow] = []
 
     reading_meaning = first_child(character, "reading_meaning")
     if reading_meaning is not None:
@@ -117,29 +123,26 @@ def parse_character(character):
                 for item in list(child):
                     if item.tag == "reading":
                         reading = text_of(item)
-                        type_value = normalize_reading_type(item.attrib.get("r_type"))
-                        if reading and type_value:
-                            rows.append(
-                                KanjiMeaningRow(
+                        reading_type = normalize_reading_type(item.attrib.get("r_type"))
+                        if reading and reading_type:
+                            readings.append(
+                                KanjiReadingRow(
                                     reading=reading,
-                                    type_value=type_value,
-                                    meaning=None,
+                                    reading_type=reading_type,
                                 )
                             )
 
                     elif item.tag == "meaning":
-                        # Берём дефолтные meanings без языка
-                        # или явно английские, если такое вдруг встретится.
+                        # Берём meanings без языка или явно английские.
                         m_lang = (
                                 item.attrib.get("{http://www.w3.org/XML/1998/namespace}lang")
                                 or item.attrib.get("m_lang")
                         )
                         meaning = text_of(item)
                         if meaning and m_lang in (None, "", "en"):
-                            rows.append(
+                            meanings.append(
                                 KanjiMeaningRow(
-                                    reading=None,
-                                    type_value="meaning",
+                                    language_code="eng",
                                     meaning=meaning,
                                 )
                             )
@@ -147,17 +150,18 @@ def parse_character(character):
             elif child.tag == "nanori":
                 nanori = text_of(child)
                 if nanori:
-                    rows.append(
-                        KanjiMeaningRow(
+                    readings.append(
+                        KanjiReadingRow(
                             reading=nanori,
-                            type_value="other",
-                            meaning=None,
+                            reading_type="nanori",
                         )
                     )
 
-    # убираем дубли
-    rows = list(dict.fromkeys(rows))
-    return literal, stroke_count, jlpt_level, rows
+    # убираем дубли, сохраняя порядок
+    readings = list(dict.fromkeys(readings))
+    meanings = list(dict.fromkeys(meanings))
+
+    return literal, stroke_count, jlpt_level, readings, meanings
 
 
 def upsert_kanji(cur, symbol: str, stroke_count: int | None, jlpt_level: str | None) -> int:
@@ -186,36 +190,57 @@ def upsert_kanji(cur, symbol: str, stroke_count: int | None, jlpt_level: str | N
     return row[0]
 
 
-def replace_kanji_meanings(cur, kanji_id: int, rows: list[KanjiMeaningRow]) -> None:
+def replace_kanji_children(
+        cur,
+        kanji_id: int,
+        readings: list[KanjiReadingRow],
+        meanings: list[KanjiMeaningRow],
+) -> None:
     cur.execute(
-        """
-        DELETE FROM kanji_meaning
-        WHERE kanji_id = %s
-        """,
+        "DELETE FROM kanji_reading WHERE kanji_id = %s",
+        (kanji_id,),
+    )
+    cur.execute(
+        "DELETE FROM kanji_meaning WHERE kanji_id = %s",
         (kanji_id,),
     )
 
-    for row in rows:
+    for row in readings:
+        cur.execute(
+            """
+            INSERT INTO kanji_reading (
+                kanji_id,
+                reading,
+                reading_type
+            )
+            VALUES (%s, %s, %s)
+                ON CONFLICT DO NOTHING
+            """,
+            (kanji_id, row.reading, row.reading_type),
+        )
+
+    for row in meanings:
         cur.execute(
             """
             INSERT INTO kanji_meaning (
                 kanji_id,
-                reading,
-                reading_type,
+                language_code,
                 meaning,
                 example
             )
-            VALUES (%s, %s, %s, %s, NULL)
+            VALUES (%s, %s, %s, NULL)
+                ON CONFLICT DO NOTHING
             """,
-            (
-                kanji_id,
-                row.reading,
-                row.type_value,
-                row.meaning,
-            ),
+            (kanji_id, row.language_code, row.meaning),
         )
 
-def import_kanjidic(xml_path: Path, db_url: str, limit: int | None, commit_every: int) -> None:
+
+def import_kanjidic(
+        xml_path: Path,
+        db_url: str,
+        limit: int | None,
+        commit_every: int,
+) -> None:
     imported = 0
     skipped = 0
 
@@ -236,7 +261,7 @@ def import_kanjidic(xml_path: Path, db_url: str, limit: int | None, commit_every
                     character.clear()
                     continue
 
-                symbol, stroke_count, jlpt_level, rows = parsed
+                symbol, stroke_count, jlpt_level, readings, meanings = parsed
 
                 kanji_id = upsert_kanji(
                     cur=cur,
@@ -245,10 +270,11 @@ def import_kanjidic(xml_path: Path, db_url: str, limit: int | None, commit_every
                     jlpt_level=jlpt_level,
                 )
 
-                replace_kanji_meanings(
+                replace_kanji_children(
                     cur=cur,
                     kanji_id=kanji_id,
-                    rows=rows,
+                    readings=readings,
+                    meanings=meanings,
                 )
 
                 imported += 1
