@@ -5,6 +5,7 @@ import com.example.config.Config
 import com.example.database.configureDatabase
 import com.example.plugins.configureCallLogging
 import com.example.plugins.configureRouting
+import com.example.plugins.configureSecurity
 import com.example.plugins.configureSerialization
 import com.example.plugins.configureStatusPages
 import io.ktor.server.application.Application
@@ -26,6 +27,7 @@ fun Application.module(config: Config = AppConfig.load()) {
     configureCallLogging()
     configureSerialization()
     configureStatusPages()
+    configureSecurity()
     configureDatabase(config)
     configureRouting()
 }
