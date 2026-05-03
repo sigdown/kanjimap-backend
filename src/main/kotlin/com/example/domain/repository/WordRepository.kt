@@ -6,9 +6,10 @@ import com.example.domain.model.WordMeaning
 import com.example.domain.model.WordRelation
 
 interface WordRepository {
-    suspend fun getById(wordId: Long): Word?
     suspend fun search(query: String): List<Word>
+    suspend fun findById(id: Long): Word?
+    suspend fun findByWritingAndReading(writingForm: String, readingKana: String): Word?
     suspend fun getMeanings(wordId: Long): List<WordMeaning>
-    suspend fun getRelations(wordId: Long): List<WordRelation>
+    suspend fun getRelatedWords(wordId: Long): List<WordRelation>
     suspend fun getKanjis(wordId: Long): List<Kanji>
 }

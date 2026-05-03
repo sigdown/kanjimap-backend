@@ -6,13 +6,14 @@ import org.jetbrains.exposed.v1.core.Table
 object KanjiMeaningsTable : Table("kanji_meaning") {
     val kanjiMeaningId = long("kanji_meaning_id").autoIncrement()
     val kanjiId = long("kanji_id").references(KanjisTable.kanjiId, onDelete = ReferenceOption.CASCADE)
-    val reading = varchar("reading", 100).nullable()
-    val readingType = varchar("reading_type", 20).nullable()
-    val meaning = text("meaning").nullable()
+    val languageCode = varchar("language_code", 10).default("eng")
+    val meaning = text("meaning")
     val example = text("example").nullable()
 
     init {
+        uniqueIndex("uq_kanji_meaning", kanjiId, languageCode, meaning)
         index("idx_kanji_meaning_kanji_id", false, kanjiId)
+        index("idx_kanji_meaning_language_code", false, languageCode)
     }
 
     override val primaryKey = PrimaryKey(kanjiMeaningId)
