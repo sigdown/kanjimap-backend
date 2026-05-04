@@ -1,6 +1,6 @@
 package com.example.application.dto.response
 
-data class WordCardResponse(
+data class WordDetailsResponse(
     val word: WordSearchItemResponse,
     val meanings: List<WordMeaningResponse>,
     val relatedWords: List<RelatedWordResponse>,

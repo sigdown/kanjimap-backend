@@ -1,6 +1,6 @@
 package com.example.application.dto.response
 
-data class KanjiCardResponse(
+data class KanjiDetailsResponse(
     val kanji: KanjiSearchItemResponse,
     val onReadings: List<String>,
     val kunReadings: List<String>,

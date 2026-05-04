@@ -2,15 +2,15 @@ package com.example.application.usecase.dictionary
 
 import com.example.application.dto.response.KanjiSearchItemResponse
 import com.example.application.dto.response.RelatedWordResponse
-import com.example.application.dto.response.WordCardResponse
+import com.example.application.dto.response.WordDetailsResponse
 import com.example.application.dto.response.WordMeaningResponse
 import com.example.application.dto.response.WordSearchItemResponse
 import com.example.domain.repository.WordRepository
 
-class GetWordCardUseCase(
+class GetWordDetailsUseCase(
     private val wordRepository: WordRepository,
 ) {
-    suspend operator fun invoke(wordId: Long): WordCardResponse {
+    suspend operator fun invoke(wordId: Long): WordDetailsResponse {
         val word = wordRepository.findById(wordId)
             ?: throw NoSuchElementException("Word with id=$wordId not found")
 
@@ -50,7 +50,7 @@ class GetWordCardUseCase(
             )
         }
 
-        return WordCardResponse(
+        return WordDetailsResponse(
             word = WordSearchItemResponse(
                 wordId = word.wordId,
                 writingForm = word.writingForm,

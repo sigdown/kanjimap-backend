@@ -1,16 +1,16 @@
 package com.example.application.usecase.dictionary
 
-import com.example.application.dto.response.KanjiCardResponse
+import com.example.application.dto.response.KanjiDetailsResponse
 import com.example.application.dto.response.KanjiMeaningResponse
 import com.example.application.dto.response.KanjiSearchItemResponse
 import com.example.application.dto.response.WordSearchItemResponse
 import com.example.domain.model.KanjiReadingType
 import com.example.domain.repository.KanjiRepository
 
-class GetKanjiCardUseCase(
+class GetKanjiDetailsUseCase(
     private val kanjiRepository: KanjiRepository,
 ) {
-    suspend operator fun invoke(kanjiId: Long, languageCode: String = "rus"): KanjiCardResponse {
+    suspend operator fun invoke(kanjiId: Long, languageCode: String = "rus"): KanjiDetailsResponse {
         val kanji = kanjiRepository.findById(kanjiId)
             ?: throw NoSuchElementException("Kanji with id=$kanjiId not found")
 
@@ -38,7 +38,7 @@ class GetKanjiCardUseCase(
             )
         }
 
-        return KanjiCardResponse(
+        return KanjiDetailsResponse(
             kanji = KanjiSearchItemResponse(
                 kanjiId = kanji.kanjiId,
                 literal = kanji.kanji,
