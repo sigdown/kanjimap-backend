@@ -29,6 +29,7 @@ dependencies {
     implementation("io.ktor:ktor-server-call-logging:3.2.0")
     implementation("io.ktor:ktor-server-auth:3.2.0")
     implementation("io.ktor:ktor-server-auth-jwt:3.2.0")
+    implementation("io.ktor:ktor-server-di:3.2.0")
 
     implementation("io.github.cdimascio:dotenv-kotlin:6.5.1")
     implementation("com.auth0:java-jwt:4.5.0")

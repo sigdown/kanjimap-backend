@@ -13,15 +13,12 @@ data class JwtConfig(
         private val dotenv = dotenv { ignoreIfMissing = true }
 
         fun load(): JwtConfig = JwtConfig(
-            secret = required("JWT_SECRET"),
+            secret = optional("JWT_SECRET") ?: "dev-jwt-secret-change-me",
             issuer = optional("JWT_ISSUER") ?: "kanjimap-backend",
             audience = optional("JWT_AUDIENCE") ?: "kanjimap-clients",
             realm = optional("JWT_REALM") ?: "kanjimap-api",
             expirationMillis = (optional("JWT_EXPIRATION_MS") ?: "86400000").toLong(),
         )
-
-        private fun required(name: String): String =
-            optional(name) ?: throw IllegalStateException("Missing required JWT config '$name'")
 
         private fun optional(name: String): String? =
             System.getenv(name)?.takeIf { it.isNotBlank() }

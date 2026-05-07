@@ -1,5 +1,8 @@
 package com.example.application.dto.response
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class WordDetailsResponse(
     val word: WordSearchItemResponse,
     val meanings: List<WordMeaningResponse>,
@@ -7,6 +10,7 @@ data class WordDetailsResponse(
     val kanjis: List<KanjiSearchItemResponse>,
 )
 
+@Serializable
 data class WordMeaningResponse(
     val meaningId: Long,
     val meaning: String,
@@ -15,6 +19,7 @@ data class WordMeaningResponse(
     val partOfSpeech: String?,
 )
 
+@Serializable
 data class RelatedWordResponse(
     val relationType: String,
     val note: String?,

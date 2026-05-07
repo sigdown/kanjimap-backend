@@ -1,5 +1,8 @@
 package com.example.application.dto.response
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class KanjiDetailsResponse(
     val kanji: KanjiSearchItemResponse,
     val onReadings: List<String>,
@@ -9,6 +12,7 @@ data class KanjiDetailsResponse(
     val words: List<WordSearchItemResponse>,
 )
 
+@Serializable
 data class KanjiMeaningResponse(
     val kanjiMeaningId: Long,
     val languageCode: String,

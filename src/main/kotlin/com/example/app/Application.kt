@@ -4,6 +4,7 @@ import com.example.config.AppConfig
 import com.example.config.Config
 import com.example.database.configureDatabase
 import com.example.plugins.configureCallLogging
+import com.example.plugins.configureDI
 import com.example.plugins.configureRouting
 import com.example.plugins.configureSecurity
 import com.example.plugins.configureSerialization
@@ -27,6 +28,7 @@ fun Application.module(config: Config = AppConfig.load()) {
     configureCallLogging()
     configureSerialization()
     configureStatusPages()
+    configureDI()
     configureSecurity()
     configureDatabase(config)
     configureRouting()
