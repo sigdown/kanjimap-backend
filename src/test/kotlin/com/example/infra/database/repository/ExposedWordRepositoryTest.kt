@@ -54,6 +54,19 @@ class ExposedWordRepositoryTest : BaseRepositoryTest() {
     }
 
     @Test
+    fun `findById should return matching word when table has multiple rows`() = runTest {
+        transaction {
+            exec("INSERT INTO word (writing_form, reading_kana, jlpt_level, topic_name) VALUES ('一つ', 'ひとつ', 'N5', 'numbers');")
+            exec("INSERT INTO word (writing_form, reading_kana, jlpt_level, topic_name) VALUES ('学生', 'がくせい', 'N5', 'school');")
+        }
+
+        val result = repository.findById(2)
+
+        assertEquals(2, result?.wordId)
+        assertEquals("学生", result?.writingForm)
+    }
+
+    @Test
     fun `getMeanings should return meanings for word`() = runTest {
         transaction {
             exec(

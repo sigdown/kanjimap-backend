@@ -34,6 +34,19 @@ class ExposedKanjiRepositoryTest : BaseRepositoryTest() {
     }
 
     @Test
+    fun `findById should return matching kanji when table has multiple rows`() = runTest {
+        transaction {
+            exec("INSERT INTO kanji (kanji, stroke_count, jlpt_level) VALUES ('一', 1, 'N5');")
+            exec("INSERT INTO kanji (kanji, stroke_count, jlpt_level) VALUES ('学', 8, 'N5');")
+        }
+
+        val result = repository.findById(2)
+
+        assertEquals(2, result?.kanjiId)
+        assertEquals("学", result?.kanji)
+    }
+
+    @Test
     fun `getReadings and getMeanings should return data for kanji`() = runTest {
         transaction {
             exec("INSERT INTO kanji (kanji, stroke_count, jlpt_level) VALUES ('生', 5, 'N5');")

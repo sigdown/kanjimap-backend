@@ -14,9 +14,7 @@ import com.example.infra.database.tables.LearningBlockKanjisTable
 import com.example.infra.database.tables.LearningBlocksTable
 import com.example.infra.database.tables.LearningBlockWordsTable
 import com.example.infra.database.tables.WordsTable
-import java.time.Instant
 import org.jetbrains.exposed.v1.core.ResultRow
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 
@@ -31,23 +29,21 @@ class ExposedLearningBlockRepository : LearningBlockRepository {
     override suspend fun findById(id: Long): LearningBlock? = dbQuery {
         LearningBlocksTable
             .selectAll()
-            .where { LearningBlocksTable.learningBlockId eq id }
-            .limit(1)
-            .map(::toLearningBlock)
-            .singleOrNull()
+            .singleOrNull { row -> row[LearningBlocksTable.learningBlockId] == id }
+            ?.let(::toLearningBlock)
     }
 
     override suspend fun getWords(blockId: Long): List<Word> = dbQuery {
         (LearningBlockWordsTable innerJoin WordsTable)
-            .select(WordsTable.columns)
-            .where { LearningBlockWordsTable.learningBlockId eq blockId }
+            .select(LearningBlockWordsTable.columns + WordsTable.columns)
+            .filter { row -> row[LearningBlockWordsTable.learningBlockId] == blockId }
             .map(::toWord)
     }
 
     override suspend fun getKanjis(blockId: Long): List<Kanji> = dbQuery {
         (LearningBlockKanjisTable innerJoin KanjisTable)
-            .select(KanjisTable.columns)
-            .where { LearningBlockKanjisTable.learningBlockId eq blockId }
+            .select(LearningBlockKanjisTable.columns + KanjisTable.columns)
+            .filter { row -> row[LearningBlockKanjisTable.learningBlockId] == blockId }
             .map(::toKanji)
     }
 
@@ -57,7 +53,7 @@ class ExposedLearningBlockRepository : LearningBlockRepository {
         description = row[LearningBlocksTable.description],
         blockType = toBlockType(row[LearningBlocksTable.blockType]),
         orderIndex = row[LearningBlocksTable.orderIndex],
-        createdAt = Instant.parse(row[LearningBlocksTable.createdAt]),
+        createdAt = row[LearningBlocksTable.createdAt],
     )
 
     private fun toWord(row: ResultRow): Word = Word(

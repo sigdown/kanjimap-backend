@@ -41,4 +41,23 @@ class ExposedUserRepositoryTest : BaseRepositoryTest() {
         val result = repository.findById(999)
         assertNull(result)
     }
+
+    @Test
+    fun `findById should return matching user when table has multiple rows`() = runTest {
+        repository.create(
+            username = "first",
+            email = "first@example.com",
+            passwordHash = "hash-1",
+        )
+        repository.create(
+            username = "second",
+            email = "second@example.com",
+            passwordHash = "hash-2",
+        )
+
+        val result = repository.findById(2)
+
+        assertEquals(2, result?.userId)
+        assertEquals("second", result?.username)
+    }
 }

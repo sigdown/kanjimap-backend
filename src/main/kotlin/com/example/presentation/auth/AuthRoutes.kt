@@ -37,8 +37,12 @@ fun Route.authRoutes() {
             try {
                 val response = useCase(request.login, request.password)
                 call.respond(HttpStatusCode.OK, response)
-            } catch (_: IllegalArgumentException) {
-                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid credentials"))
+            } catch (cause: IllegalArgumentException) {
+                if (cause.message == "Invalid credentials") {
+                    call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid credentials"))
+                } else {
+                    throw cause
+                }
             }
         }
 

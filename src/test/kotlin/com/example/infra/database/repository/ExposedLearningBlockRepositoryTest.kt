@@ -16,7 +16,7 @@ class ExposedLearningBlockRepositoryTest : BaseRepositoryTest() {
             exec(
                 """
                 INSERT INTO learning_block (title, description, block_type, order_index, created_at)
-                VALUES ('N5 words', 'intro', 'word', 1, NOW()::text);
+                VALUES ('N5 words', 'intro', 'word', 1, NOW());
                 """.trimIndent()
             )
         }
@@ -33,9 +33,22 @@ class ExposedLearningBlockRepositoryTest : BaseRepositoryTest() {
     }
 
     @Test
+    fun `findById should return matching block when table has multiple rows`() = runTest {
+        transaction {
+            exec("INSERT INTO learning_block (title, description, block_type, order_index, created_at) VALUES ('block-1', NULL, 'mixed', 1, NOW());")
+            exec("INSERT INTO learning_block (title, description, block_type, order_index, created_at) VALUES ('block-2', NULL, 'word', 2, NOW());")
+        }
+
+        val result = repository.findById(2)
+
+        assertEquals(2, result?.learningBlockId)
+        assertEquals("block-2", result?.title)
+    }
+
+    @Test
     fun `getWords and getKanjis should return linked entities`() = runTest {
         transaction {
-            exec("INSERT INTO learning_block (title, description, block_type, order_index, created_at) VALUES ('mixed-1', NULL, 'mixed', 1, NOW()::text);")
+            exec("INSERT INTO learning_block (title, description, block_type, order_index, created_at) VALUES ('mixed-1', NULL, 'mixed', 1, NOW());")
             exec("INSERT INTO word (writing_form, reading_kana, jlpt_level, topic_name) VALUES ('学校', 'がっこう', 'N5', 'education');")
             exec("INSERT INTO kanji (kanji, stroke_count, jlpt_level) VALUES ('学', 8, 'N5');")
             exec("INSERT INTO learning_block_word (learning_block_id, word_id, order_index) VALUES (1, 1, 1);")

@@ -8,7 +8,6 @@ import com.example.infra.database.dbQuery
 import com.example.infra.database.tables.AppUsersTable
 import java.time.Instant
 import org.jetbrains.exposed.v1.core.ResultRow
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 
@@ -16,32 +15,26 @@ class ExposedUserRepository : UserRepository {
     override suspend fun findById(id: Long): User? = dbQuery {
         AppUsersTable
             .selectAll()
-            .where { AppUsersTable.userId eq id }
-            .limit(1)
-            .map(::toUser)
-            .singleOrNull()
+            .singleOrNull { row -> row[AppUsersTable.userId] == id }
+            ?.let(::toUser)
     }
 
     override suspend fun findByEmail(email: String): User? = dbQuery {
         AppUsersTable
             .selectAll()
-            .where { AppUsersTable.email eq email }
-            .limit(1)
-            .map(::toUser)
-            .singleOrNull()
+            .singleOrNull { row -> row[AppUsersTable.email] == email }
+            ?.let(::toUser)
     }
 
     override suspend fun findByUsername(username: String): User? = dbQuery {
         AppUsersTable
             .selectAll()
-            .where { AppUsersTable.username eq username }
-            .limit(1)
-            .map(::toUser)
-            .singleOrNull()
+            .singleOrNull { row -> row[AppUsersTable.username] == username }
+            ?.let(::toUser)
     }
 
     override suspend fun create(username: String, email: String, passwordHash: String): User = dbQuery {
-        val now = Instant.now().toString()
+        val now = Instant.now()
         val id = AppUsersTable
             .insert {
                 it[AppUsersTable.username] = username
@@ -57,10 +50,8 @@ class ExposedUserRepository : UserRepository {
 
         AppUsersTable
             .selectAll()
-            .where { AppUsersTable.userId eq id }
-            .limit(1)
-            .map(::toUser)
-            .single()
+            .single { row -> row[AppUsersTable.userId] == id }
+            .let(::toUser)
     }
 
     private fun toUser(row: ResultRow): User = User(
@@ -68,7 +59,7 @@ class ExposedUserRepository : UserRepository {
         username = row[AppUsersTable.username],
         email = row[AppUsersTable.email],
         passwordHash = row[AppUsersTable.passwordHash],
-        createdAt = Instant.parse(row[AppUsersTable.createdAt]),
-        updatedAt = Instant.parse(row[AppUsersTable.updatedAt]),
+        createdAt = row[AppUsersTable.createdAt],
+        updatedAt = row[AppUsersTable.updatedAt],
     )
 }

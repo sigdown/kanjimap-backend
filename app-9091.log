@@ -1,0 +1,35 @@
+> Task :checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :compileKotlin UP-TO-DATE
+> Task :compileJava NO-SOURCE
+> Task :processResources UP-TO-DATE
+> Task :classes UP-TO-DATE
+
+> Task :run
+2026-05-07 13:53:10.390 INFO  [main] io.ktor.server.Application - Autoreload is disabled because the development mode is off.
+2026-05-07 13:53:10.705 INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-07 13:53:10.928 INFO  [main] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@153cd6bb
+2026-05-07 13:53:10.929 INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-07 13:53:11.212 INFO  [main] org.flywaydb.core.FlywayExecutor - Database: jdbc:postgresql://localhost:5432/app (PostgreSQL 16.13)
+2026-05-07 13:53:11.307 INFO  [main] o.f.core.internal.command.DbValidate - Successfully validated 3 migrations (execution time 00:00.035s)
+2026-05-07 13:53:11.330 INFO  [main] o.f.core.internal.command.DbMigrate - Current version of schema "public": 3
+2026-05-07 13:53:11.333 INFO  [main] o.f.core.internal.command.DbMigrate - Schema "public" is up to date. No migration necessary.
+2026-05-07 13:53:11.423 INFO  [main] io.ktor.server.Application - Application started in 1.238 seconds.
+2026-05-07 13:53:11.607 INFO  [DefaultDispatcher-worker-1] io.ktor.server.Application - Responding at http://127.0.0.1:9091
+2026-05-07 13:53:25.463 INFO  [eventLoopGroupProxy-3-1] io.ktor.server.Application - 400 Bad Request: POST - /api/auth/register in 141ms
+
+> Task :run FAILED
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':run'.
+> Process 'command 'C:\Program Files\Eclipse Adoptium\jdk-17.0.17.10-hotspot\bin\java.exe'' finished with non-zero exit value -1
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to generate a Build Scan (Powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 34s
+3 actionable tasks: 1 executed, 2 up-to-date

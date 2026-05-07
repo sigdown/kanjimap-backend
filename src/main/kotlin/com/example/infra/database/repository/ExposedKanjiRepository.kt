@@ -42,10 +42,8 @@ class ExposedKanjiRepository : KanjiRepository {
     override suspend fun findById(id: Long): Kanji? = dbQuery {
         KanjisTable
             .selectAll()
-            .where { KanjisTable.kanjiId eq id }
-            .limit(1)
-            .map(::toKanji)
-            .singleOrNull()
+            .singleOrNull { row -> row[KanjisTable.kanjiId] == id }
+            ?.let(::toKanji)
     }
 
     override suspend fun findByLiteral(literal: String): Kanji? = dbQuery {
@@ -60,24 +58,24 @@ class ExposedKanjiRepository : KanjiRepository {
     override suspend fun getReadings(kanjiId: Long): List<KanjiReading> = dbQuery {
         KanjiReadingsTable
             .selectAll()
-            .where { KanjiReadingsTable.kanjiId eq kanjiId }
+            .filter { row -> row[KanjiReadingsTable.kanjiId] == kanjiId }
             .map(::toKanjiReading)
     }
 
     override suspend fun getMeanings(kanjiId: Long, languageCode: String): List<KanjiMeaning> = dbQuery {
         KanjiMeaningsTable
             .selectAll()
-            .where {
-                (KanjiMeaningsTable.kanjiId eq kanjiId) and
-                    (KanjiMeaningsTable.languageCode eq languageCode)
+            .filter { row ->
+                row[KanjiMeaningsTable.kanjiId] == kanjiId &&
+                    row[KanjiMeaningsTable.languageCode] == languageCode
             }
             .map(::toKanjiMeaning)
     }
 
     override suspend fun getWords(kanjiId: Long): List<Word> = dbQuery {
         (KanjiWordsTable innerJoin WordsTable)
-            .select(WordsTable.columns)
-            .where { KanjiWordsTable.kanjiId eq kanjiId }
+            .select(KanjiWordsTable.columns + WordsTable.columns)
+            .filter { row -> row[KanjiWordsTable.kanjiId] == kanjiId }
             .map(::toWord)
     }
 
