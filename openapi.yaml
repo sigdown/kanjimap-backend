@@ -1,0 +1,832 @@
+openapi: 3.0.3
+info:
+  title: Kanjimap Backend API
+  version: 1.0.0
+  description: |
+    REST API for a Japanese learning application.
+
+    The API provides:
+    - user authentication,
+    - dictionary search for words and kanji,
+    - learning blocks,
+    - per-user progress,
+    - review answer checking.
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+tags:
+  - name: Health
+  - name: Auth
+  - name: Dictionary
+  - name: Learning
+  - name: Progress
+  - name: Review
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Server is alive
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+  /api/auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a new user
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Log in by email or username
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/auth/me:
+    get:
+      tags: [Auth]
+      summary: Get current user profile
+      operationId: getCurrentUser
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/words:
+    get:
+      tags: [Dictionary]
+      summary: Search words
+      operationId: searchWords
+      parameters:
+        - in: query
+          name: query
+          required: true
+          schema:
+            type: string
+          description: Search string
+      responses:
+        '200':
+          description: Matching words
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WordSearchItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/words/{id}:
+    get:
+      tags: [Dictionary]
+      summary: Get word details
+      operationId: getWordDetails
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Detailed word information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WordDetailsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/kanji:
+    get:
+      tags: [Dictionary]
+      summary: Search kanji
+      operationId: searchKanji
+      parameters:
+        - in: query
+          name: query
+          required: true
+          schema:
+            type: string
+          description: Search string
+      responses:
+        '200':
+          description: Matching kanji
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/KanjiSearchItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/kanji/{id}:
+    get:
+      tags: [Dictionary]
+      summary: Get kanji details
+      operationId: getKanjiDetails
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Detailed kanji information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KanjiDetailsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/learning/blocks:
+    get:
+      tags: [Learning]
+      summary: List learning blocks
+      operationId: getLearningBlocks
+      responses:
+        '200':
+          description: Ordered learning blocks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LearningBlockResponse'
+  /api/learning/blocks/{id}:
+    get:
+      tags: [Learning]
+      summary: Get learning block details
+      operationId: getLearningBlockDetails
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Block with linked words and kanji
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LearningBlockDetailsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/progress/words/{id}:
+    get:
+      tags: [Progress]
+      summary: Get current user's word progress
+      operationId: getWordProgress
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Word progress
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WordProgressResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Progress]
+      summary: Update current user's word progress
+      operationId: updateWordProgress
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateWordProgressRequest'
+      responses:
+        '200':
+          description: Updated word progress
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WordProgressResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/progress/kanji/{id}:
+    get:
+      tags: [Progress]
+      summary: Get current user's kanji progress
+      operationId: getKanjiProgress
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Kanji progress
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KanjiProgressResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Progress]
+      summary: Update current user's kanji progress
+      operationId: updateKanjiProgress
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateKanjiProgressRequest'
+      responses:
+        '200':
+          description: Updated kanji progress
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KanjiProgressResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/review/words:
+    get:
+      tags: [Review]
+      summary: Get due word review items
+      operationId: getReviewWords
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Due word review items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReviewItemResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/review/kanji:
+    get:
+      tags: [Review]
+      summary: Get due kanji review items
+      operationId: getReviewKanji
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Due kanji review items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReviewItemResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/review/words/{id}/check:
+    post:
+      tags: [Review]
+      summary: Check answer for a word review item
+      operationId: checkWordAnswer
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckWordAnswerRequest'
+      responses:
+        '200':
+          description: Review result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewResultResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/review/kanji/{id}/check:
+    post:
+      tags: [Review]
+      summary: Check answer for a kanji review item
+      operationId: checkKanjiAnswer
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckKanjiAnswerRequest'
+      responses:
+        '200':
+          description: Review result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewResultResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    IdPath:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+        format: int64
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: Authentication required or invalid token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Requested entity was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  schemas:
+    HealthResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          example: ok
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          example: Invalid credentials
+    RegisterRequest:
+      type: object
+      required: [username, email, password]
+      properties:
+        username:
+          type: string
+          example: vasiliy
+        email:
+          type: string
+          format: email
+          example: vasiliy@example.com
+        password:
+          type: string
+          minLength: 6
+          example: secret123
+    LoginRequest:
+      type: object
+      required: [login, password]
+      properties:
+        login:
+          type: string
+          description: Username or email
+          example: vasiliy@example.com
+        password:
+          type: string
+          example: secret123
+    AuthResponse:
+      type: object
+      required: [accessToken, user]
+      properties:
+        accessToken:
+          type: string
+        user:
+          $ref: '#/components/schemas/UserProfileResponse'
+    UserProfileResponse:
+      type: object
+      required: [userId, username, email, createdAt, updatedAt]
+      properties:
+        userId:
+          type: integer
+          format: int64
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    WordSearchItemResponse:
+      type: object
+      required: [wordId, writingForm, readingKana]
+      properties:
+        wordId:
+          type: integer
+          format: int64
+        writingForm:
+          type: string
+        readingKana:
+          type: string
+        jlptLevel:
+          type: string
+          nullable: true
+          example: N5
+        topicName:
+          type: string
+          nullable: true
+          example: education
+    WordMeaningResponse:
+      type: object
+      required: [meaningId, meaning]
+      properties:
+        meaningId:
+          type: integer
+          format: int64
+        meaning:
+          type: string
+        exampleJp:
+          type: string
+          nullable: true
+        exampleTranslation:
+          type: string
+          nullable: true
+        partOfSpeech:
+          type: string
+          nullable: true
+    RelatedWordResponse:
+      type: object
+      required: [relationType]
+      properties:
+        relationType:
+          type: string
+          enum: [variant, similar, confusable]
+        note:
+          type: string
+          nullable: true
+        word:
+          allOf:
+            - $ref: '#/components/schemas/WordSearchItemResponse'
+          nullable: true
+    WordDetailsResponse:
+      type: object
+      required: [word, meanings, relatedWords, kanjis]
+      properties:
+        word:
+          $ref: '#/components/schemas/WordSearchItemResponse'
+        meanings:
+          type: array
+          items:
+            $ref: '#/components/schemas/WordMeaningResponse'
+        relatedWords:
+          type: array
+          items:
+            $ref: '#/components/schemas/RelatedWordResponse'
+        kanjis:
+          type: array
+          items:
+            $ref: '#/components/schemas/KanjiSearchItemResponse'
+    KanjiSearchItemResponse:
+      type: object
+      required: [kanjiId, literal]
+      properties:
+        kanjiId:
+          type: integer
+          format: int64
+        literal:
+          type: string
+        strokeCount:
+          type: integer
+          nullable: true
+        jlptLevel:
+          type: string
+          nullable: true
+          example: N4
+    KanjiMeaningResponse:
+      type: object
+      required: [kanjiMeaningId, languageCode, meaning]
+      properties:
+        kanjiMeaningId:
+          type: integer
+          format: int64
+        languageCode:
+          type: string
+          example: rus
+        meaning:
+          type: string
+        example:
+          type: string
+          nullable: true
+    KanjiDetailsResponse:
+      type: object
+      required: [kanji, onReadings, kunReadings, nanoriReadings, meanings, words]
+      properties:
+        kanji:
+          $ref: '#/components/schemas/KanjiSearchItemResponse'
+        onReadings:
+          type: array
+          items:
+            type: string
+        kunReadings:
+          type: array
+          items:
+            type: string
+        nanoriReadings:
+          type: array
+          items:
+            type: string
+        meanings:
+          type: array
+          items:
+            $ref: '#/components/schemas/KanjiMeaningResponse'
+        words:
+          type: array
+          items:
+            $ref: '#/components/schemas/WordSearchItemResponse'
+    LearningBlockResponse:
+      type: object
+      required: [learningBlockId, title, blockType, orderIndex]
+      properties:
+        learningBlockId:
+          type: integer
+          format: int64
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        blockType:
+          type: string
+          enum: [word, kanji, mixed]
+        orderIndex:
+          type: integer
+    LearningBlockDetailsResponse:
+      type: object
+      required: [block, words, kanjis]
+      properties:
+        block:
+          $ref: '#/components/schemas/LearningBlockResponse'
+        words:
+          type: array
+          items:
+            $ref: '#/components/schemas/WordSearchItemResponse'
+        kanjis:
+          type: array
+          items:
+            $ref: '#/components/schemas/KanjiSearchItemResponse'
+    UpdateWordProgressRequest:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/ProgressStatus'
+        correctNumber:
+          type: integer
+          minimum: 0
+        wrongNumber:
+          type: integer
+          minimum: 0
+        repetitionLevel:
+          type: integer
+          minimum: 0
+        lastReviewAt:
+          type: string
+          format: date-time
+          nullable: true
+        nextReviewAt:
+          type: string
+          format: date-time
+          nullable: true
+    UpdateKanjiProgressRequest:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/ProgressStatus'
+        correctNumber:
+          type: integer
+          minimum: 0
+        wrongNumber:
+          type: integer
+          minimum: 0
+        repetitionLevel:
+          type: integer
+          minimum: 0
+        lastReviewAt:
+          type: string
+          format: date-time
+          nullable: true
+        nextReviewAt:
+          type: string
+          format: date-time
+          nullable: true
+    WordProgressResponse:
+      type: object
+      required:
+        [wordId, status, correctNumber, wrongNumber, repetitionLevel, updatedAt]
+      properties:
+        wordId:
+          type: integer
+          format: int64
+        status:
+          $ref: '#/components/schemas/ProgressStatus'
+        correctNumber:
+          type: integer
+        wrongNumber:
+          type: integer
+        repetitionLevel:
+          type: integer
+        lastReviewAt:
+          type: string
+          format: date-time
+          nullable: true
+        nextReviewAt:
+          type: string
+          format: date-time
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+    KanjiProgressResponse:
+      type: object
+      required:
+        [kanjiId, status, correctNumber, wrongNumber, repetitionLevel, updatedAt]
+      properties:
+        kanjiId:
+          type: integer
+          format: int64
+        status:
+          $ref: '#/components/schemas/ProgressStatus'
+        correctNumber:
+          type: integer
+        wrongNumber:
+          type: integer
+        repetitionLevel:
+          type: integer
+        lastReviewAt:
+          type: string
+          format: date-time
+          nullable: true
+        nextReviewAt:
+          type: string
+          format: date-time
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+    CheckWordAnswerRequest:
+      type: object
+      required: [answer]
+      properties:
+        answer:
+          type: string
+    CheckKanjiAnswerRequest:
+      type: object
+      required: [answer]
+      properties:
+        answer:
+          type: string
+    ReviewItemResponse:
+      type: object
+      required:
+        [itemId, itemType, status, correctNumber, wrongNumber, repetitionLevel]
+      properties:
+        itemId:
+          type: integer
+          format: int64
+        itemType:
+          type: string
+          enum: [word, kanji]
+        word:
+          allOf:
+            - $ref: '#/components/schemas/WordSearchItemResponse'
+          nullable: true
+        kanji:
+          allOf:
+            - $ref: '#/components/schemas/KanjiSearchItemResponse'
+          nullable: true
+        status:
+          $ref: '#/components/schemas/ProgressStatus'
+        correctNumber:
+          type: integer
+        wrongNumber:
+          type: integer
+        repetitionLevel:
+          type: integer
+        nextReviewAt:
+          type: string
+          format: date-time
+          nullable: true
+    ReviewResultResponse:
+      type: object
+      required:
+        [itemId, itemType, isCorrect, acceptedAnswers, status, correctNumber, wrongNumber, repetitionLevel]
+      properties:
+        itemId:
+          type: integer
+          format: int64
+        itemType:
+          type: string
+          enum: [word, kanji]
+        isCorrect:
+          type: boolean
+        acceptedAnswers:
+          type: array
+          items:
+            type: string
+        status:
+          $ref: '#/components/schemas/ProgressStatus'
+        correctNumber:
+          type: integer
+        wrongNumber:
+          type: integer
+        repetitionLevel:
+          type: integer
+        lastReviewAt:
+          type: string
+          format: date-time
+          nullable: true
+        nextReviewAt:
+          type: string
+          format: date-time
+          nullable: true
+    ProgressStatus:
+      type: string
+      enum: [new, learning, review, mastered]

@@ -1,36 +1,85 @@
-# Ktor REST Template
+# Kanjimap Backend
 
-A small Ktor REST API starter with PostgreSQL, HikariCP, Flyway migrations, and Exposed DSL.
+Backend for a Japanese learning app. The project exposes a REST API for:
+
+- authentication,
+- dictionary search for words and kanji,
+- learning blocks,
+- per-user progress,
+- review/check flows.
+
+The project was built with Ktor, PostgreSQL, Flyway, Exposed DSL, and JWT authentication.
 
 ## Stack
 
-- Kotlin JVM
-- Ktor Server with Netty
-- kotlinx.serialization JSON
-- PostgreSQL JDBC driver
-- HikariCP datasource
-- Flyway SQL migrations
-- JetBrains Exposed DSL over JDBC
+- Kotlin JVM 17
+- Ktor Server 3
+- PostgreSQL
+- Flyway
+- Exposed DSL
+- HikariCP
+- kotlinx.serialization
+- JWT auth
+- JUnit 5 + Testcontainers
+
+## API documentation
+
+OpenAPI specification is stored in the project root:
+
+```text
+openapi.yaml
+```
+
+You can open it in Swagger Editor, IntelliJ HTTP client plugins, or any OpenAPI-compatible viewer.
 
 ## Run locally
 
-Start PostgreSQL:
+### 1. Start PostgreSQL
 
 ```bash
 docker compose up -d
 ```
 
-Run the API with a locally installed Gradle:
+### 2. Configure environment
+
+The app reads real environment variables first and then falls back to values from a local `.env` file.
+
+Minimum required variables:
 
 ```bash
-gradle run
+SERVER_HOST=0.0.0.0
+SERVER_PORT=8080
+
+DATABASE_JDBC_URL=jdbc:postgresql://localhost:5432/app
+DATABASE_USER=app
+DATABASE_PASSWORD=app
+DATABASE_MAX_POOL_SIZE=10
+
+JWT_SECRET=dev-jwt-secret-change-me
+JWT_ISSUER=kanjimap-backend
+JWT_AUDIENCE=kanjimap-clients
+JWT_REALM=kanjimap-api
+JWT_EXPIRATION_MS=86400000
 ```
 
-Optional: generate a Gradle wrapper after opening the project:
+### 3. Start the server
+
+Windows:
 
 ```bash
-gradle wrapper
+gradlew.bat run
+```
+
+Linux/macOS:
+
+```bash
 ./gradlew run
+```
+
+After startup the API is available at:
+
+```text
+http://localhost:8080
 ```
 
 Health check:
@@ -39,74 +88,83 @@ Health check:
 curl http://localhost:8080/health
 ```
 
-Create a user:
+## Main endpoints
 
-```bash
-curl -X POST http://localhost:8080/api/v1/users \
-  -H 'Content-Type: application/json' \
-  -d '{"email":"vasily@example.com","name":"Vasily"}'
+### Public
+
+- `GET /health`
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `GET /api/words?query=...`
+- `GET /api/words/{id}`
+- `GET /api/kanji?query=...`
+- `GET /api/kanji/{id}`
+- `GET /api/learning/blocks`
+- `GET /api/learning/blocks/{id}`
+
+### JWT protected
+
+Use header:
+
+```text
+Authorization: Bearer <accessToken>
 ```
 
-List users:
+Protected endpoints:
 
-```bash
-curl http://localhost:8080/api/v1/users
-```
+- `GET /api/auth/me`
+- `GET /api/progress/words/{id}`
+- `PUT /api/progress/words/{id}`
+- `GET /api/progress/kanji/{id}`
+- `PUT /api/progress/kanji/{id}`
+- `GET /api/review/words`
+- `GET /api/review/kanji`
+- `POST /api/review/words/{id}/check`
+- `POST /api/review/kanji/{id}/check`
 
-## Environment variables
+## Database
 
-The app reads real environment variables first, then falls back to values in local `.env`.
-
-```bash
-SERVER_HOST=0.0.0.0
-SERVER_PORT=8080
-DATABASE_JDBC_URL=jdbc:postgresql://localhost:5432/app
-DATABASE_USER=app
-DATABASE_PASSWORD=app
-DATABASE_MAX_POOL_SIZE=10
-```
-
-## Migration flow
-
-SQL migrations live in:
+Migrations are stored in:
 
 ```text
 src/main/resources/db/migration
 ```
 
-Flyway runs automatically during app startup before Exposed connects. Add new migrations as:
+Flyway runs automatically on application startup before the database is used by Exposed.
 
-```text
-V2__your_change.sql
-V3__another_change.sql
+## Tests
+
+Run all tests:
+
+Windows:
+
+```bash
+gradlew.bat test
 ```
 
-## REST endpoints
+Linux/macOS:
 
-| Method | Path | Description |
-|---|---|---|
-| GET | `/health` | Health check |
-| GET | `/api/v1/users` | List users |
-| GET | `/api/v1/users/{id}` | Get user by ID |
-| POST | `/api/v1/users` | Create user |
-| PUT | `/api/v1/users/{id}` | Update user |
-| DELETE | `/api/v1/users/{id}` | Delete user |
+```bash
+./gradlew test
+```
+
+Notes:
+
+- unit tests run without Docker,
+- repository integration tests use Testcontainers,
+- Docker Desktop or another working Docker environment is required for the full test suite.
 
 ## Project structure
 
 ```text
 src/main/kotlin/com/example
-  Application.kt
-  config/AppConfig.kt
-  database/DataSourceFactory.kt
-  database/DatabaseFactory.kt
-  plugins/
-  users/
+  app/
+  application/
+  domain/
+  infra/
+  presentation/
 src/main/resources
-  logback.xml
-  db/migration/V1__create_users.sql
+  db/migration/
+openapi.yaml
+docker-compose.yml
 ```
-
-## Notes
-
-This template uses Exposed DSL, not DAO. That keeps the database layer explicit and avoids magic entity state in a REST API, because apparently production systems enjoy clarity.
