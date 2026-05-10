@@ -11,39 +11,36 @@ import com.example.infra.database.tables.UserKanjiProgressTable
 import com.example.infra.database.tables.UserWordProgressTable
 import java.time.Instant
 import org.jetbrains.exposed.v1.core.ResultRow
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.jetbrains.exposed.v1.jdbc.update
+import org.jetbrains.exposed.v1.jdbc.upsert
 
 class ExposedProgressRepository : ProgressRepository {
     override suspend fun getWordProgress(userId: Long, wordId: Long): UserWordProgress? = dbQuery {
         UserWordProgressTable
             .selectAll()
-            .singleOrNull { row ->
+            .filter { row ->
                 row[UserWordProgressTable.userId] == userId &&
                     row[UserWordProgressTable.wordId] == wordId
             }
-            ?.let(::toUserWordProgress)
+            .map(::toUserWordProgress)
+            .singleOrNull()
     }
 
     override suspend fun getKanjiProgress(userId: Long, kanjiId: Long): UserKanjiProgress? = dbQuery {
         UserKanjiProgressTable
             .selectAll()
-            .singleOrNull { row ->
+            .filter { row ->
                 row[UserKanjiProgressTable.userId] == userId &&
                     row[UserKanjiProgressTable.kanjiId] == kanjiId
             }
-            ?.let(::toUserKanjiProgress)
+            .map(::toUserKanjiProgress)
+            .singleOrNull()
     }
 
     override suspend fun saveWordProgress(progress: UserWordProgress) {
         dbQuery {
-            val updated = UserWordProgressTable.update({
-                (UserWordProgressTable.userId eq progress.userId) and
-                    (UserWordProgressTable.wordId eq progress.wordId)
-            }) {
+            UserWordProgressTable.upsert(UserWordProgressTable.userId, UserWordProgressTable.wordId) {
                 it[status] = progress.status.name.lowercase()
                 it[correctNumber] = progress.correctNumber
                 it[wrongNumber] = progress.wrongNumber
@@ -51,30 +48,15 @@ class ExposedProgressRepository : ProgressRepository {
                 it[lastReviewAt] = progress.lastReviewAt
                 it[nextReviewAt] = progress.nextReviewAt
                 it[updatedAt] = progress.updatedAt
-            }
-
-            if (updated == 0) {
-                UserWordProgressTable.insert {
-                    it[userId] = progress.userId
-                    it[wordId] = progress.wordId
-                    it[status] = progress.status.name.lowercase()
-                    it[correctNumber] = progress.correctNumber
-                    it[wrongNumber] = progress.wrongNumber
-                    it[repetitionLevel] = progress.repetitionLevel
-                    it[lastReviewAt] = progress.lastReviewAt
-                    it[nextReviewAt] = progress.nextReviewAt
-                    it[updatedAt] = progress.updatedAt
-                }
+                it[userId] = progress.userId
+                it[wordId] = progress.wordId
             }
         }
     }
 
     override suspend fun saveKanjiProgress(progress: UserKanjiProgress) {
         dbQuery {
-            val updated = UserKanjiProgressTable.update({
-                (UserKanjiProgressTable.userId eq progress.userId) and
-                    (UserKanjiProgressTable.kanjiId eq progress.kanjiId)
-            }) {
+            UserKanjiProgressTable.upsert(UserKanjiProgressTable.userId, UserKanjiProgressTable.kanjiId) {
                 it[status] = progress.status.name.lowercase()
                 it[correctNumber] = progress.correctNumber
                 it[wrongNumber] = progress.wrongNumber
@@ -82,20 +64,8 @@ class ExposedProgressRepository : ProgressRepository {
                 it[lastReviewAt] = progress.lastReviewAt
                 it[nextReviewAt] = progress.nextReviewAt
                 it[updatedAt] = progress.updatedAt
-            }
-
-            if (updated == 0) {
-                UserKanjiProgressTable.insert {
-                    it[userId] = progress.userId
-                    it[kanjiId] = progress.kanjiId
-                    it[status] = progress.status.name.lowercase()
-                    it[correctNumber] = progress.correctNumber
-                    it[wrongNumber] = progress.wrongNumber
-                    it[repetitionLevel] = progress.repetitionLevel
-                    it[lastReviewAt] = progress.lastReviewAt
-                    it[nextReviewAt] = progress.nextReviewAt
-                    it[updatedAt] = progress.updatedAt
-                }
+                it[userId] = progress.userId
+                it[kanjiId] = progress.kanjiId
             }
         }
     }

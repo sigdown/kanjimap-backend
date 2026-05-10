@@ -42,8 +42,9 @@ class ExposedKanjiRepository : KanjiRepository {
     override suspend fun findById(id: Long): Kanji? = dbQuery {
         KanjisTable
             .selectAll()
-            .singleOrNull { row -> row[KanjisTable.kanjiId] == id }
-            ?.let(::toKanji)
+            .filter { row -> row[KanjisTable.kanjiId] == id }
+            .map(::toKanji)
+            .singleOrNull()
     }
 
     override suspend fun findByLiteral(literal: String): Kanji? = dbQuery {

@@ -5,7 +5,6 @@ import com.example.application.usecase.dictionary.GetWordDetailsUseCase
 import com.example.application.usecase.dictionary.SearchKanjiUseCase
 import com.example.application.usecase.dictionary.SearchWordsUseCase
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.call
 import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route

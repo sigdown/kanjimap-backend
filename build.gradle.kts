@@ -21,6 +21,8 @@ kotlin {
 }
 
 dependencies {
+    val testcontainersVersion = "1.21.4"
+
     implementation("io.ktor:ktor-server-core:3.2.0")
     implementation("io.ktor:ktor-server-netty:3.2.0")
     implementation("io.ktor:ktor-server-content-negotiation:3.2.0")
@@ -48,8 +50,8 @@ dependencies {
 
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
-    testImplementation("org.testcontainers:junit-jupiter:1.20.4")
-    testImplementation("org.testcontainers:postgresql:1.20.4")
+    testImplementation("org.testcontainers:junit-jupiter:$testcontainersVersion")
+    testImplementation("org.testcontainers:postgresql:$testcontainersVersion")
     testImplementation("org.flywaydb:flyway-core:12.5.0")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
     testImplementation("io.ktor:ktor-server-test-host:3.2.0")

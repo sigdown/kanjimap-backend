@@ -29,8 +29,9 @@ class ExposedLearningBlockRepository : LearningBlockRepository {
     override suspend fun findById(id: Long): LearningBlock? = dbQuery {
         LearningBlocksTable
             .selectAll()
-            .singleOrNull { row -> row[LearningBlocksTable.learningBlockId] == id }
-            ?.let(::toLearningBlock)
+            .filter { row -> row[LearningBlocksTable.learningBlockId] == id }
+            .map(::toLearningBlock)
+            .singleOrNull()
     }
 
     override suspend fun getWords(blockId: Long): List<Word> = dbQuery {

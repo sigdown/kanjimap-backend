@@ -15,22 +15,25 @@ class ExposedUserRepository : UserRepository {
     override suspend fun findById(id: Long): User? = dbQuery {
         AppUsersTable
             .selectAll()
-            .singleOrNull { row -> row[AppUsersTable.userId] == id }
-            ?.let(::toUser)
+            .filter { row -> row[AppUsersTable.userId] == id }
+            .map(::toUser)
+            .singleOrNull()
     }
 
     override suspend fun findByEmail(email: String): User? = dbQuery {
         AppUsersTable
             .selectAll()
-            .singleOrNull { row -> row[AppUsersTable.email] == email }
-            ?.let(::toUser)
+            .filter { row -> row[AppUsersTable.email] == email }
+            .map(::toUser)
+            .singleOrNull()
     }
 
     override suspend fun findByUsername(username: String): User? = dbQuery {
         AppUsersTable
             .selectAll()
-            .singleOrNull { row -> row[AppUsersTable.username] == username }
-            ?.let(::toUser)
+            .filter { row -> row[AppUsersTable.username] == username }
+            .map(::toUser)
+            .singleOrNull()
     }
 
     override suspend fun create(username: String, email: String, passwordHash: String): User = dbQuery {
@@ -50,8 +53,9 @@ class ExposedUserRepository : UserRepository {
 
         AppUsersTable
             .selectAll()
-            .single { row -> row[AppUsersTable.userId] == id }
-            .let(::toUser)
+            .filter { row -> row[AppUsersTable.userId] == id }
+            .map(::toUser)
+            .single()
     }
 
     private fun toUser(row: ResultRow): User = User(

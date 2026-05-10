@@ -42,8 +42,9 @@ class ExposedWordRepository : WordRepository {
     override suspend fun findById(id: Long): Word? = dbQuery {
         WordsTable
             .selectAll()
-            .singleOrNull { row -> row[WordsTable.wordId] == id }
-            ?.let(::toWord)
+            .filter { row -> row[WordsTable.wordId] == id }
+            .map(::toWord)
+            .singleOrNull()
     }
 
     override suspend fun findByWritingAndReading(writingForm: String, readingKana: String): Word? = dbQuery {
