@@ -24,7 +24,7 @@ class ExposedProgressRepositoryTest : BaseRepositoryTest() {
     @Test
     fun `saveWordProgress should insert and then update progress`() = runTest {
         transaction {
-            exec("INSERT INTO app_user (username, email, password_hash, created_at, updated_at) VALUES ('u1', 'u1@example.com', 'hash', NOW()::text, NOW()::text);")
+            exec("INSERT INTO app_user (username, email, password_hash, created_at, updated_at) VALUES ('u1', 'u1@example.com', 'hash', NOW(), NOW());")
             exec("INSERT INTO word (writing_form, reading_kana, jlpt_level, topic_name) VALUES ('先生', 'せんせい', 'N5', 'education');")
         }
 
@@ -51,9 +51,50 @@ class ExposedProgressRepositoryTest : BaseRepositoryTest() {
     }
 
     @Test
+    fun `getWordProgress should return matching row when user has multiple progress records`() = runTest {
+        transaction {
+            exec("INSERT INTO app_user (username, email, password_hash, created_at, updated_at) VALUES ('u-multi', 'u-multi@example.com', 'hash', NOW(), NOW());")
+            exec("INSERT INTO word (writing_form, reading_kana, jlpt_level, topic_name) VALUES ('one', 'one', 'N5', 'numbers');")
+            exec("INSERT INTO word (writing_form, reading_kana, jlpt_level, topic_name) VALUES ('two', 'two', 'N5', 'numbers');")
+        }
+
+        repository.saveWordProgress(
+            UserWordProgress(
+                userId = 1,
+                wordId = 1,
+                status = ProgressStatus.NEW,
+                correctNumber = 0,
+                wrongNumber = 0,
+                repetitionLevel = 0,
+                lastReviewAt = null,
+                nextReviewAt = null,
+                updatedAt = Instant.now(),
+            ),
+        )
+        repository.saveWordProgress(
+            UserWordProgress(
+                userId = 1,
+                wordId = 2,
+                status = ProgressStatus.REVIEW,
+                correctNumber = 3,
+                wrongNumber = 1,
+                repetitionLevel = 2,
+                lastReviewAt = Instant.now(),
+                nextReviewAt = Instant.now().plusSeconds(3600),
+                updatedAt = Instant.now(),
+            ),
+        )
+
+        val result = repository.getWordProgress(1, 2)
+        assertEquals(2, result?.wordId)
+        assertEquals(ProgressStatus.REVIEW, result?.status)
+        assertEquals(3, result?.correctNumber)
+    }
+
+    @Test
     fun `getKanjisForReview should return due progress`() = runTest {
         transaction {
-            exec("INSERT INTO app_user (username, email, password_hash, created_at, updated_at) VALUES ('u2', 'u2@example.com', 'hash', NOW()::text, NOW()::text);")
+            exec("INSERT INTO app_user (username, email, password_hash, created_at, updated_at) VALUES ('u2', 'u2@example.com', 'hash', NOW(), NOW());")
             exec("INSERT INTO kanji (kanji, stroke_count, jlpt_level) VALUES ('生', 5, 'N5');")
         }
 

@@ -2,6 +2,7 @@ package com.example.infra.database.tables
 
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.javatime.timestamp
 
 object UserKanjiProgressTable : Table("user_kanji_progress") {
     val userId = long("user_id").references(AppUsersTable.userId, onDelete = ReferenceOption.CASCADE)
@@ -10,9 +11,9 @@ object UserKanjiProgressTable : Table("user_kanji_progress") {
     val correctNumber = integer("correct_number").default(0)
     val wrongNumber = integer("wrong_number").default(0)
     val repetitionLevel = integer("repetition_level").default(0)
-    val lastReviewAt = text("last_review_at").nullable()
-    val nextReviewAt = text("next_review_at").nullable()
-    val updatedAt = text("updated_at")
+    val lastReviewAt = timestamp("last_review_at").nullable()
+    val nextReviewAt = timestamp("next_review_at").nullable()
+    val updatedAt = timestamp("updated_at")
 
     init {
         index("idx_user_kanji_progress_next_review", false, userId, nextReviewAt)

@@ -3,6 +3,8 @@ package com.example.plugins
 import com.example.presentation.auth.authRoutes
 import com.example.presentation.dictionary.dictionaryRoutes
 import com.example.presentation.learning.learningRoutes
+import com.example.presentation.progress.progressRoutes
+import com.example.presentation.review.reviewRoutes
 import io.ktor.server.application.Application
 import io.ktor.server.response.respond
 import io.ktor.server.routing.get
@@ -17,5 +19,7 @@ fun Application.configureRouting() {
         dictionaryRoutes()
         authRoutes()
         learningRoutes()
+        progressRoutes()
+        reviewRoutes()
     }
 }

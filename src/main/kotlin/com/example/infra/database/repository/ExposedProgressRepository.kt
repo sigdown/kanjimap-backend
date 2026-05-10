@@ -12,7 +12,6 @@ import com.example.infra.database.tables.UserWordProgressTable
 import java.time.Instant
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.lessEq
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -22,25 +21,21 @@ class ExposedProgressRepository : ProgressRepository {
     override suspend fun getWordProgress(userId: Long, wordId: Long): UserWordProgress? = dbQuery {
         UserWordProgressTable
             .selectAll()
-            .where {
-                (UserWordProgressTable.userId eq userId) and
-                    (UserWordProgressTable.wordId eq wordId)
+            .singleOrNull { row ->
+                row[UserWordProgressTable.userId] == userId &&
+                    row[UserWordProgressTable.wordId] == wordId
             }
-            .limit(1)
-            .map(::toUserWordProgress)
-            .singleOrNull()
+            ?.let(::toUserWordProgress)
     }
 
     override suspend fun getKanjiProgress(userId: Long, kanjiId: Long): UserKanjiProgress? = dbQuery {
         UserKanjiProgressTable
             .selectAll()
-            .where {
-                (UserKanjiProgressTable.userId eq userId) and
-                    (UserKanjiProgressTable.kanjiId eq kanjiId)
+            .singleOrNull { row ->
+                row[UserKanjiProgressTable.userId] == userId &&
+                    row[UserKanjiProgressTable.kanjiId] == kanjiId
             }
-            .limit(1)
-            .map(::toUserKanjiProgress)
-            .singleOrNull()
+            ?.let(::toUserKanjiProgress)
     }
 
     override suspend fun saveWordProgress(progress: UserWordProgress) {
@@ -53,9 +48,9 @@ class ExposedProgressRepository : ProgressRepository {
                 it[correctNumber] = progress.correctNumber
                 it[wrongNumber] = progress.wrongNumber
                 it[repetitionLevel] = progress.repetitionLevel
-                it[lastReviewAt] = progress.lastReviewAt?.toString()
-                it[nextReviewAt] = progress.nextReviewAt?.toString()
-                it[updatedAt] = progress.updatedAt.toString()
+                it[lastReviewAt] = progress.lastReviewAt
+                it[nextReviewAt] = progress.nextReviewAt
+                it[updatedAt] = progress.updatedAt
             }
 
             if (updated == 0) {
@@ -66,9 +61,9 @@ class ExposedProgressRepository : ProgressRepository {
                     it[correctNumber] = progress.correctNumber
                     it[wrongNumber] = progress.wrongNumber
                     it[repetitionLevel] = progress.repetitionLevel
-                    it[lastReviewAt] = progress.lastReviewAt?.toString()
-                    it[nextReviewAt] = progress.nextReviewAt?.toString()
-                    it[updatedAt] = progress.updatedAt.toString()
+                    it[lastReviewAt] = progress.lastReviewAt
+                    it[nextReviewAt] = progress.nextReviewAt
+                    it[updatedAt] = progress.updatedAt
                 }
             }
         }
@@ -84,9 +79,9 @@ class ExposedProgressRepository : ProgressRepository {
                 it[correctNumber] = progress.correctNumber
                 it[wrongNumber] = progress.wrongNumber
                 it[repetitionLevel] = progress.repetitionLevel
-                it[lastReviewAt] = progress.lastReviewAt?.toString()
-                it[nextReviewAt] = progress.nextReviewAt?.toString()
-                it[updatedAt] = progress.updatedAt.toString()
+                it[lastReviewAt] = progress.lastReviewAt
+                it[nextReviewAt] = progress.nextReviewAt
+                it[updatedAt] = progress.updatedAt
             }
 
             if (updated == 0) {
@@ -97,9 +92,9 @@ class ExposedProgressRepository : ProgressRepository {
                     it[correctNumber] = progress.correctNumber
                     it[wrongNumber] = progress.wrongNumber
                     it[repetitionLevel] = progress.repetitionLevel
-                    it[lastReviewAt] = progress.lastReviewAt?.toString()
-                    it[nextReviewAt] = progress.nextReviewAt?.toString()
-                    it[updatedAt] = progress.updatedAt.toString()
+                    it[lastReviewAt] = progress.lastReviewAt
+                    it[nextReviewAt] = progress.nextReviewAt
+                    it[updatedAt] = progress.updatedAt
                 }
             }
         }
@@ -108,9 +103,9 @@ class ExposedProgressRepository : ProgressRepository {
     override suspend fun getWordsForReview(userId: Long, now: Instant): List<UserWordProgress> = dbQuery {
         UserWordProgressTable
             .selectAll()
-            .where {
-                (UserWordProgressTable.userId eq userId) and
-                    (UserWordProgressTable.nextReviewAt lessEq now.toString())
+            .filter { row ->
+                row[UserWordProgressTable.userId] == userId &&
+                    row[UserWordProgressTable.nextReviewAt]?.let { !it.isAfter(now) } == true
             }
             .map(::toUserWordProgress)
     }
@@ -118,9 +113,9 @@ class ExposedProgressRepository : ProgressRepository {
     override suspend fun getKanjisForReview(userId: Long, now: Instant): List<UserKanjiProgress> = dbQuery {
         UserKanjiProgressTable
             .selectAll()
-            .where {
-                (UserKanjiProgressTable.userId eq userId) and
-                    (UserKanjiProgressTable.nextReviewAt lessEq now.toString())
+            .filter { row ->
+                row[UserKanjiProgressTable.userId] == userId &&
+                    row[UserKanjiProgressTable.nextReviewAt]?.let { !it.isAfter(now) } == true
             }
             .map(::toUserKanjiProgress)
     }
@@ -132,9 +127,9 @@ class ExposedProgressRepository : ProgressRepository {
         correctNumber = row[UserWordProgressTable.correctNumber],
         wrongNumber = row[UserWordProgressTable.wrongNumber],
         repetitionLevel = row[UserWordProgressTable.repetitionLevel],
-        lastReviewAt = row[UserWordProgressTable.lastReviewAt]?.let(Instant::parse),
-        nextReviewAt = row[UserWordProgressTable.nextReviewAt]?.let(Instant::parse),
-        updatedAt = Instant.parse(row[UserWordProgressTable.updatedAt]),
+        lastReviewAt = row[UserWordProgressTable.lastReviewAt],
+        nextReviewAt = row[UserWordProgressTable.nextReviewAt],
+        updatedAt = row[UserWordProgressTable.updatedAt],
     )
 
     private fun toUserKanjiProgress(row: ResultRow): UserKanjiProgress = UserKanjiProgress(
@@ -144,9 +139,9 @@ class ExposedProgressRepository : ProgressRepository {
         correctNumber = row[UserKanjiProgressTable.correctNumber],
         wrongNumber = row[UserKanjiProgressTable.wrongNumber],
         repetitionLevel = row[UserKanjiProgressTable.repetitionLevel],
-        lastReviewAt = row[UserKanjiProgressTable.lastReviewAt]?.let(Instant::parse),
-        nextReviewAt = row[UserKanjiProgressTable.nextReviewAt]?.let(Instant::parse),
-        updatedAt = Instant.parse(row[UserKanjiProgressTable.updatedAt]),
+        lastReviewAt = row[UserKanjiProgressTable.lastReviewAt],
+        nextReviewAt = row[UserKanjiProgressTable.nextReviewAt],
+        updatedAt = row[UserKanjiProgressTable.updatedAt],
     )
 
     private fun toProgressStatus(value: String): ProgressStatus = when (value.lowercase()) {
