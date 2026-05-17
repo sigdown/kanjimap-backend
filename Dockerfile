@@ -11,10 +11,8 @@ RUN chmod +x ./gradlew
 RUN --mount=type=cache,target=/root/.gradle \
     ./gradlew dependencies --no-daemon
 
-# Теперь копируем исходники
 COPY src ./src
 
-# Для Ktor Gradle plugin
 RUN --mount=type=cache,target=/root/.gradle \
     ./gradlew buildFatJar --no-daemon
 

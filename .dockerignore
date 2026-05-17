@@ -8,6 +8,8 @@
 build
 out
 
+.gradle-user
+
 .env
 .env.local
 .env.*.local

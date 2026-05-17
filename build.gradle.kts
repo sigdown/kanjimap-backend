@@ -1,3 +1,6 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.gradle.api.file.DuplicatesStrategy
+
 plugins {
     kotlin("jvm") version "2.3.21"
     kotlin("plugin.serialization") version "2.3.21"
@@ -62,4 +65,15 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+ktor {
+    fatJar {
+        archiveFileName.set("kanjimap-backend-all.jar")
+    }
+}
+
+tasks.withType<ShadowJar> {
+    mergeServiceFiles()
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
