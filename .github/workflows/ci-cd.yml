@@ -102,7 +102,7 @@ jobs:
           port: ${{ secrets.VPS_PORT || 22 }}
           script: |
             set -e
-            cd /srv/coursework
+            cd /srv/kanjimap
             docker compose pull
             docker compose up -d
             docker image prune -f
