@@ -6,7 +6,9 @@ Reads DB config from .env in the project root:
 
 SERVER_HOST=0.0.0.0
 SERVER_PORT=8080
-DATABASE_JDBC_URL=jdbc:postgresql://localhost:5432/app
+DATABASE_HOST=postgres
+DATABASE_PORT=5432
+DATABASE_NAME=app
 DATABASE_USER=app
 DATABASE_PASSWORD=app
 DATABASE_MAX_POOL_SIZE=10
@@ -36,7 +38,6 @@ from __future__ import annotations
 import argparse
 import csv
 import os
-import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -78,44 +79,24 @@ def read_env_file(path: Path) -> dict[str, str]:
     return env
 
 
-def parse_jdbc_postgres_url(jdbc_url: str) -> tuple[str, int, str]:
-    """
-    Converts:
-      jdbc:postgresql://localhost:5432/app
-
-    Into:
-      host=localhost, port=5432, database=app
-    """
-    pattern = r"^jdbc:postgresql://(?P<host>[^:/?#]+)(:(?P<port>\d+))?/(?P<db>[^?#]+)"
-    match = re.match(pattern, jdbc_url)
-
-    if not match:
-        raise ValueError(
-            "Unsupported DATABASE_JDBC_URL format. "
-            "Expected something like: jdbc:postgresql://localhost:5432/app"
-        )
-
-    host = match.group("host")
-    port = int(match.group("port") or "5432")
-    database = match.group("db")
-
-    return host, port, database
-
-
 def load_db_config(env_path: Path) -> DbConfig:
     file_env = read_env_file(env_path)
 
     # OS environment wins over .env, which is useful in CI or Docker.
     merged_env = {**file_env, **os.environ}
 
-    jdbc_url = merged_env.get("DATABASE_JDBC_URL")
+    host = merged_env.get("DATABASE_HOST")
+    port = merged_env.get("DATABASE_PORT")
+    database = merged_env.get("DATABASE_NAME")
     user = merged_env.get("DATABASE_USER")
     password = merged_env.get("DATABASE_PASSWORD")
 
     missing = [
         name
         for name, value in {
-            "DATABASE_JDBC_URL": jdbc_url,
+            "DATABASE_HOST": host,
+            "DATABASE_PORT": port,
+            "DATABASE_NAME": database,
             "DATABASE_USER": user,
             "DATABASE_PASSWORD": password,
         }.items()
@@ -125,11 +106,9 @@ def load_db_config(env_path: Path) -> DbConfig:
     if missing:
         raise RuntimeError(f"Missing required env values: {', '.join(missing)}")
 
-    host, port, database = parse_jdbc_postgres_url(jdbc_url)
-
     return DbConfig(
         host=host,
-        port=port,
+        port=int(port),
         database=database,
         user=user,
         password=password,

@@ -6,11 +6,12 @@ import com.zaxxer.hikari.HikariDataSource
 
 object DataSourceFactory {
     fun create(config: Config): HikariDataSource {
+        val database = config.database
         val hikariConfig = HikariConfig().apply {
-            jdbcUrl = config.databaseUrl
-            username = config.databaseUser
-            password = config.databasePassword
-            maximumPoolSize = config.databaseMaximumPoolSize
+            jdbcUrl = database.jdbcUrl
+            username = database.user
+            password = database.password
+            maximumPoolSize = database.maxPoolSize
             driverClassName = "org.postgresql.Driver"
             isAutoCommit = false
             transactionIsolation = "TRANSACTION_REPEATABLE_READ"

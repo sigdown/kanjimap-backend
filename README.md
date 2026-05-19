@@ -50,7 +50,9 @@ Minimum required variables:
 SERVER_HOST=0.0.0.0
 SERVER_PORT=8080
 
-DATABASE_JDBC_URL=jdbc:postgresql://localhost:5432/app
+DATABASE_HOST=postgres
+DATABASE_PORT=5432
+DATABASE_NAME=app
 DATABASE_USER=app
 DATABASE_PASSWORD=app
 DATABASE_MAX_POOL_SIZE=10
@@ -166,5 +168,5 @@ src/main/kotlin/com/example
 src/main/resources
   db/migration/
 openapi.yaml
-docker-compose.yml
+compose.yml
 ```

@@ -12,10 +12,14 @@ object AppConfig {
         serverPort = optionalInt("SERVER_PORT")
             ?: optionalInt("PORT")
             ?: 8080,
-        databaseUrl = requiredString("DATABASE_JDBC_URL"),
-        databaseUser = requiredString("DATABASE_USER"),
-        databasePassword = requiredString("DATABASE_PASSWORD"),
-        databaseMaximumPoolSize = optionalInt("DATABASE_MAX_POOL_SIZE") ?: 10,
+        database = DatabaseConfig(
+            host = requiredString("DATABASE_HOST"),
+            port = optionalInt("DATABASE_PORT") ?: 5432,
+            name = requiredString("DATABASE_NAME"),
+            user = requiredString("DATABASE_USER"),
+            password = requiredString("DATABASE_PASSWORD"),
+            maxPoolSize = optionalInt("DATABASE_MAX_POOL_SIZE") ?: 10,
+        ),
     )
 
     private fun requiredString(name: String): String = optionalString(name)
@@ -38,8 +42,17 @@ object AppConfig {
 data class Config(
     val serverHost: String,
     val serverPort: Int,
-    val databaseUrl: String,
-    val databaseUser: String,
-    val databasePassword: String,
-    val databaseMaximumPoolSize: Int,
+    val database: DatabaseConfig,
 )
+
+data class DatabaseConfig(
+    val host: String,
+    val port: Int,
+    val name: String,
+    val user: String,
+    val password: String,
+    val maxPoolSize: Int,
+) {
+    val jdbcUrl: String
+        get() = "jdbc:postgresql://$host:$port/$name"
+}

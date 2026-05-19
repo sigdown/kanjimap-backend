@@ -6,8 +6,8 @@ out/
 .run/
 *.iml
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
 .DS_Store
 .venv/
 __pycache__/

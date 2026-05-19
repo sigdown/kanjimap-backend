@@ -24,28 +24,19 @@ def build_db_url(explicit_db_url: str | None = None) -> str:
     if direct_url:
         return direct_url
 
-    jdbc_url = os.getenv("DATABASE_JDBC_URL")
+    host = os.getenv("DATABASE_HOST")
+    port = os.getenv("DATABASE_PORT", "5432")
+    name = os.getenv("DATABASE_NAME")
     user = os.getenv("DATABASE_USER")
     password = os.getenv("DATABASE_PASSWORD")
 
-    if not jdbc_url or not user or not password:
+    if not host or not name or not user or not password:
         raise RuntimeError(
             "Не найдены DATABASE_URL или набор "
-            "DATABASE_JDBC_URL / DATABASE_USER / DATABASE_PASSWORD"
+            "DATABASE_HOST / DATABASE_PORT / DATABASE_NAME / DATABASE_USER / DATABASE_PASSWORD"
         )
 
-    prefix = "jdbc:postgresql://"
-    if not jdbc_url.startswith(prefix):
-        raise RuntimeError(f"Неподдерживаемый JDBC URL: {jdbc_url}")
-
-    # jdbc:postgresql://localhost:5432/app
-    rest = jdbc_url[len("jdbc:") :]
-    pg_prefix = "postgresql://"
-    if not rest.startswith(pg_prefix):
-        raise RuntimeError(f"Не удалось преобразовать JDBC URL: {jdbc_url}")
-
-    target = rest[len(pg_prefix):]
-    return f"{pg_prefix}{user}:{password}@{target}"
+    return f"postgresql://{user}:{password}@{host}:{port}/{name}"
 
 
 def text_of(elem) -> str | None:
